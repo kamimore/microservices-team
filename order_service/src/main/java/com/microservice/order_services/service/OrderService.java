@@ -33,7 +33,7 @@ public class OrderService {
         order.setOrderLineItemsList(orderLineItems);
 
         // todo: inventory service
-        List<String> skuCodes = order.getOrderLineItemsList().stream().map(orderLineItem -> orderLineItem.getSkuCode())
+        List<String> skuCodes = order.getOrderLineItemsList().stream().map(OrderLineItems::getSkuCode)
                 .toList();
 
         InventoryResponse[] inventoryResponseArray = webClient.get()
@@ -42,9 +42,9 @@ public class OrderService {
                 .retrieve().bodyToMono(InventoryResponse[].class)
                 .block();
 
-       boolean allProductInStock =  Arrays.stream(inventoryResponseArray).allMatch(InventoryResponse::isInStock);
+        boolean allProductInStock = Arrays.stream(inventoryResponseArray).allMatch(InventoryResponse::isInStock);
 
-        if (allProductInStock) {
+        if (allProductInStock && inventoryResponseArray.length > 0) {
             orderRepository.save(order);
         } else {
             throw new IllegalArgumentException("Product not in stock");
@@ -55,8 +55,8 @@ public class OrderService {
     public OrderLineItems mapToDto(OrderLineItemsDto orderLineItemsDto) {
         OrderLineItems orderLineItems = new OrderLineItems();
         orderLineItems.setPrice(orderLineItemsDto.getPrice());
-        orderLineItems.setQuantity(orderLineItems.getQuantity());
-        orderLineItems.setSkuCode(orderLineItems.getSkuCode());
+        orderLineItems.setQuantity(orderLineItemsDto.getQuantity());
+        orderLineItems.setSkuCode(orderLineItemsDto.getSkuCode());
         return orderLineItems;
     }
 }
